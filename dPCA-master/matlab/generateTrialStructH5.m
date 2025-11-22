@@ -1,0 +1,244 @@
+function generateTrialStructH5(sessionData, alignV, preD, postD, outputFilename, metadata)
+% generateNeuralDataH5 - Generate H5 file with neural data in specified format
+%
+% Inputs:
+%   sessionData - struct containing session information (baseDir, kilosortDir, eventsDir, eventsFile)
+%   alignV - alignment event ('targets', 'checkerboard', 'delay', 'movement')
+%   preD - time before alignment (seconds, negative value)
+%   postD - time after alignment (seconds, positive value)
+%   trialType - 'correct', 'wrong', or 'all'
+%   outputFilename - path/name for output H5 file
+%   metadata - struct with fields: monkey_id, probe_type, roi, session_date, suffix, task_type
+%
+% Example:
+%   metadata.monkey_id = 'M1';
+%   metadata.probe_type = 'Neuropixels';
+%   metadata.roi = 'dlPFC';
+%   metadata.session_date = '2024-01-15';
+%   metadata.suffix = 'doublebank';
+%   metadata.task_type = 'CFD';
+%   generateNeuralDataH5(sessionData, 'targets', -1.8, 1.0, 'correct', 'output.h5', metadata);
+
+addpath(genpath('~/Documents/NpxPostProcessing/utils/spikes/'))
+addpath(genpath('~/Documents/NpxPostProcessing/utils/npy-matlab'))
+
+%% Parameters
+timeShift = 0;
+nidqSR = 19999.72;  % NI daq sampling rate
+n_spikeThresh = 10000;
+ampThresh = 11;
+
+%% TO-DO: Load data (make into GUI/prompt)
+baseDir = sessionData.baseDir; % imec0 folder for NPix
+myKsDir = [baseDir sessionData.kilosortDir]; % kilosort folder
+eventsDir = sessionData.eventsDir; % where events .mat is
+
+clusterInfo = tdfread([myKsDir 'cluster_info.tsv']);
+fprintf("Total units: %d \n", length(clusterInfo.cluster_id))
+
+CFDevents = load([eventsDir sessionData.eventsFile]).CFDeventStruct; % actual event
+
+sp = loadKSdir(myKsDir);
+allSpikeTime = sp.st + timeShift;
+allSpikeClu = sp.clu; % vector of all clusters
+
+%% Filter units
+cluId = clusterInfo.cluster_id(clusterInfo.n_spikes > n_spikeThresh & clusterInfo.amp > ampThresh);
+% unit_quality_labels = clusterInfo.group(clusterInfo.n_spikes > n_spikeThresh & clusterInfo.amp > ampThresh, :);
+
+fprintf("Post-filtered units: %d \n", length(cluId))
+
+%% Create time bins
+time_bins = (preD:0.001:postD-0.001) * 1000;  % Convert to milliseconds
+n_time = length(time_bins);
+
+%% Extract trial parameters
+n_trials = length(CFDevents);
+
+% Extract correctness: 1 = 'correct', otherwise 'incorrect'
+correctness_vals = [CFDevents.correctness];
+trial_outcomes = cell(n_trials, 1);
+trial_outcomes(correctness_vals == 1) = {'correct'};
+trial_outcomes(correctness_vals ~= 1) = {'incorrect'};
+
+% Extract action choices: 1 = 'right', otherwise 'left'
+chosen_side_vals = [CFDevents.chosenSide];
+trial_action_choices = cell(n_trials, 1);
+trial_action_choices(chosen_side_vals == 1) = {'right'};
+trial_action_choices(chosen_side_vals ~= 1) = {'left'};
+
+% Extract RTs as uint16
+trial_RTs = uint16([CFDevents.RT])';
+if size(trial_RTs, 1) == 1
+    trial_RTs = trial_RTs';
+end
+
+% Extract cues as uint8
+trial_cues = uint8([CFDevents.cue]);
+if size(trial_cues, 1) == 1
+    trial_cues = trial_cues';
+end
+
+% Extract configs: leftTarget == 2 means 'RG', otherwise 'GR'
+left_target_vals = [CFDevents.leftTarget];
+trial_configs = cell(n_trials, 1);
+trial_configs(left_target_vals == 2) = {'RG'};
+trial_configs(left_target_vals ~= 2) = {'GR'};
+
+% Determine color choices based on config and action
+trial_color_choices = cell(n_trials, 1);
+% Get savetags
+trial_savetags = zeros(n_trials, 1, 'int32');
+for ii = 1:n_trials
+    if strcmp(trial_configs{ii}, 'RG')
+        if strcmp(trial_action_choices{ii}, 'right')
+            trial_color_choices{ii} = 'R';
+        else
+            trial_color_choices{ii} = 'G';
+        end
+    else  % GR config
+        if strcmp(trial_action_choices{ii}, 'right')
+            trial_color_choices{ii} = 'G';
+        else
+            trial_color_choices{ii} = 'R';
+        end
+    end
+
+    param_str = CFDevents(ii).ParameterData;
+    % Find ',ST:' in the string
+    st_idx = strfind(param_str, ',ST:');
+    % Extract substring after ',ST:'
+    after_st = param_str(st_idx(1)+4:end);
+    % Find next comma
+    comma_idx = strfind(after_st, ',');
+    if ~isempty(comma_idx)
+        savetag_str = after_st(1:comma_idx(1)-1);
+    else
+        savetag_str = after_st;
+    end
+    % Convert to integer
+    trial_savetags(ii) = str2double(savetag_str);
+end
+
+%% Generate trial rasters
+n_units = length(cluId);
+trial_rasters = zeros(n_trials, n_units, n_time);
+
+fprintf('Generating trial rasters...\n');
+for jj = 1:n_units
+    if mod(jj, 25) == 0
+        fprintf('Unit %d/%d\n', jj, n_units);
+    end
+    
+    id = cluId(jj);
+    spikeTime = allSpikeTime(allSpikeClu == id);
+    
+    for ii = 1:n_trials
+        % Get alignment time
+        switch(alignV)
+            case 'targets'
+                alignment = CFDevents(ii).TrialEventTimes.TargetsDrawnTime / nidqSR;
+            case 'checkerboard'
+                alignment = CFDevents(ii).TrialEventTimes.CheckerboardDrawnTime / nidqSR;
+        %     case 'delay'
+        %         alignment = CFDevents(ii).TrialEventTimes.CheckerboardDrawnTime / nidqSR + 0.9;
+        %     case 'movement'
+        %         alignment = CFDevents(ii).TrialEventTimes.CheckerboardDrawnTime / nidqSR + CFDevents(ii).RT / 1000;
+        end
+        
+        % Get spikes in window
+        currIdx = spikeTime > alignment + preD & spikeTime < alignment + postD;
+        
+        if any(currIdx)
+            % Convert spike times to bin indices
+            spike_times_relative = spikeTime(currIdx) - alignment;
+            bin_indices = round((spike_times_relative - preD) * 1000) + 1;
+            
+            % Ensure indices are within bounds
+            valid_bins = bin_indices > 0 & bin_indices <= n_time;
+            bin_indices = bin_indices(valid_bins);
+            
+            % Create spike train
+            trial_rasters(ii, jj, bin_indices) = 1;
+        end
+    end
+end
+
+%% Write to H5 file
+fprintf('Writing to H5 file: %s\n', outputFilename);
+
+% Delete file if it exists
+if exist(outputFilename, 'file')
+    delete(outputFilename);
+end
+
+% Write datasets with compression and appropriate data types
+h5create(outputFilename, '/time_bins', length(time_bins), 'Datatype', 'single', ...
+    'ChunkSize', min(length(time_bins), 1000), 'Deflate', 9);
+h5write(outputFilename, '/time_bins', time_bins);
+
+h5create(outputFilename, '/unit_ids', length(cluId), 'Datatype', 'int32', ...
+    'ChunkSize', min(length(cluId), 100), 'Deflate', 9);
+h5write(outputFilename, '/unit_ids', int32(cluId));
+
+% Convert sparse trial_rasters to uint8 and use compression
+trial_rasters_uint8 = uint8(trial_rasters);
+chunk_size = [min(n_trials, 10), min(n_units, 10), min(n_time, 1000)];
+h5create(outputFilename, '/trial_rasters', size(trial_rasters_uint8), ...
+    'Datatype', 'uint8', 'ChunkSize', chunk_size, 'Deflate', 9);
+h5write(outputFilename, '/trial_rasters', trial_rasters_uint8);
+
+% Write metadata
+h5writeatt(outputFilename, '/', 'align_event', alignV);
+h5writeatt(outputFilename, '/', 'monkey_id', metadata.monkey_id);
+h5writeatt(outputFilename, '/', 'probe_type', metadata.probe_type);
+h5writeatt(outputFilename, '/', 'roi', metadata.roi);
+h5writeatt(outputFilename, '/', 'session_date', metadata.session_date);
+h5writeatt(outputFilename, '/', 'suffix', metadata.suffix);
+h5writeatt(outputFilename, '/', 'task_type', metadata.task_type);
+
+% Write unit quality labels as a dataset
+% Convert char array to cell array of strings for H5
+% quality_labels_cell = cellstr(unit_quality_labels);
+% h5create(outputFilename, '/unit_quality_labels', [length(quality_labels_cell), 1], 'Datatype', 'string');
+% h5write(outputFilename, '/unit_quality_labels', quality_labels_cell);
+
+% Write trial parameters with compression
+h5create(outputFilename, '/trial_params/trial_RTs', [n_trials, 1], ...
+    'Datatype', 'uint16', 'ChunkSize', [min(n_trials, 1000), 1], 'Deflate', 9);
+h5write(outputFilename, '/trial_params/trial_RTs', trial_RTs);
+
+h5create(outputFilename, '/trial_params/trial_action_choices', [n_trials, 1], ...
+    'Datatype', 'string', 'ChunkSize', [min(n_trials, 1000), 1], 'Deflate', 9);
+h5write(outputFilename, '/trial_params/trial_action_choices', trial_action_choices);
+
+h5create(outputFilename, '/trial_params/trial_cues', [n_trials, 1], ...
+    'Datatype', 'uint8', 'ChunkSize', [min(n_trials, 1000), 1], 'Deflate', 9);
+h5write(outputFilename, '/trial_params/trial_cues', trial_cues);
+
+h5create(outputFilename, '/trial_params/trial_color_choices', [n_trials, 1], ...
+    'Datatype', 'string', 'ChunkSize', [min(n_trials, 1000), 1], 'Deflate', 9);
+h5write(outputFilename, '/trial_params/trial_color_choices', trial_color_choices);
+
+h5create(outputFilename, '/trial_params/trial_outcomes', [n_trials, 1], ...
+    'Datatype', 'string', 'ChunkSize', [min(n_trials, 1000), 1], 'Deflate', 9);
+h5write(outputFilename, '/trial_params/trial_outcomes', trial_outcomes);
+
+% Write trial_configs as strings
+h5create(outputFilename, '/trial_params/trial_configs', [n_trials, 1], ...
+    'Datatype', 'string', 'ChunkSize', [min(n_trials, 1000), 1], 'Deflate', 9);
+h5write(outputFilename, '/trial_params/trial_configs', trial_configs);
+
+% Create empty trial_savetags
+h5create(outputFilename, '/trial_params/trial_savetags', [n_trials, 1], ...
+    'Datatype', 'int32', 'ChunkSize', [min(n_trials, 1000), 1], 'Deflate', 9);
+h5write(outputFilename, '/trial_params/trial_savetags', int32(trial_savetags));
+
+
+fprintf('H5 file generation complete!\n');
+fprintf('File contains:\n');
+fprintf('  - %d trials\n', n_trials);
+fprintf('  - %d units\n', n_units);
+fprintf('  - %d time bins (%.1f to %.1f ms)\n', n_time, time_bins(1), time_bins(end));
+
+end

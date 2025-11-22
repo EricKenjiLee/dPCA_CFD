@@ -1,0 +1,41 @@
+monkey = 'bilbo';
+align = 'checkerboard';
+
+switch(monkey)
+    case 'bilbo'
+        sessData = returnSessionData_Bilbo();
+    case 'tiberius'
+        sessData = returnSessionData_Tibs();
+end      
+
+switch(align)
+    case 'checkerboard'
+        pre = -0.4;
+        post = 1.5;
+
+    case 'targets'
+        pre = -0.8;
+        post = 0.4;
+end
+
+
+firingRatesAverage = [];
+firingRatesAverageError = [];
+firingRatesAverageCorrect = [];
+
+for m=1:length(sessData)
+    currData = returnSessionFiringRatesPerCoherence(sessData(m),align,pre,post,'all');
+    firingRatesAverage = cat(1, firingRatesAverage, currData);
+
+    currDataError = returnSessionFiringRatesPerCoherence(sessData(m),align,pre,post,'wrong');
+    firingRatesAverageError = cat(1, firingRatesAverageError, currDataError);
+
+    currDataCorrect = returnSessionFiringRatesPerCoherence(sessData(m),align,pre,post,'correct');
+    firingRatesAverageCorrect = cat(1, firingRatesAverageCorrect, currDataCorrect);
+end
+
+%firingRatesAverage arranged as Neurons by Color by Coherence by Time
+% Color: Red then Green; Coherence: Easy, Medium, Hard
+
+preCut = pre + 0.2;
+postCut = post-0.2;

@@ -1,0 +1,223 @@
+function firingRatesAverage = returnErrorFiringRates(sessionData, alignV, preD, postD)
+%
+%
+
+addpath(genpath('~/Documents/NpxPostProcessing/utils/spikes/'))
+addpath(genpath('~/Documents/NpxPostProcessing/utils/npy-matlab'))
+
+timeShift = 0;
+chopTime = 200;
+task = 'CFD';
+
+% NI daq sampling rate
+nidqSR = 20000;
+
+% specify alignment
+align = alignV;
+
+% pre and post time around alignment
+pre = preD;
+preV = abs(pre);
+post = postD-0.001;
+
+% set the minimum spike numbers & amplitude 
+n_spikeThresh = 10000;
+ampThresh = 11;
+
+%%
+
+baseDir = sessionData.baseDir;
+myKsDir = [baseDir sessionData.kilosortDir];
+eventsDir = sessionData.eventsDir;
+
+clusterInfo = tdfread([myKsDir 'cluster_info.tsv']);
+fprintf("Total units: %d \n", length(clusterInfo.cluster_id))
+
+CFDevents = load([eventsDir sessionData.eventsFile]).CFDeventStruct;
+CFDevents = CFDevents([CFDevents.correctness] == 99); % Just pick error trials
+length(CFDevents);
+
+
+sp = loadKSdir(myKsDir);
+
+
+allSpikeTime = sp.st + timeShift;
+allSpikeClu = sp.clu;
+
+
+%% 
+
+
+switch(task)
+    case('TF')
+        eventStruct = TFevents;
+    case('CF')
+        eventStruct = CFevents;
+    case('CFD')
+        eventStruct = CFDevents;
+end
+
+
+g = normpdf([-0.1:0.001:0.1], 0,0.02);
+
+preV = abs(pre);
+n = length(pre:0.001:post);
+
+
+% use a filter to filter clusterID
+cluId = clusterInfo.cluster_id(clusterInfo.n_spikes > n_spikeThresh & clusterInfo.amp > ampThresh);
+channelId = clusterInfo.ch(clusterInfo.n_spikes > n_spikeThresh & clusterInfo.amp > ampThresh);
+
+
+fprintf("Post-filtered units: %d \n", length(cluId))
+%%
+firingRatesAverage = [];
+
+for jj = 1:length(cluId)
+     fprintf('.');  
+    
+    id = cluId(jj);
+    spikeTime = allSpikeTime(allSpikeClu == id);    
+    rLR = zeros(1,n);    
+    rRR = zeros(1,n); 
+    rLG = zeros(1,n);  
+    rRG = zeros(1,n); 
+    
+    rFR_LR = [];               
+    rFR_RR = []; 
+    rFR_LG = []; 
+    rFR_RG = [];
+     
+                           
+    lrcnt = 1;
+    rrcnt = 1;        
+    lgcnt = 1;
+    rgcnt = 1;  
+     
+
+    % figure('position', [1000 ,1500,1000,800]);
+    for ii = 1:length(eventStruct)
+        switch (align)
+            case 'targets'
+                alignment = eventStruct(ii).TrialEventTimes.TargetsDrawnTime./nidqSR;
+            case 'checkerboard' 
+                alignment = eventStruct(ii).TrialEventTimes.CheckerboardDrawnTime./nidqSR;
+            case 'delay' 
+                alignment = eventStruct(ii).TrialEventTimes.CheckerboardDrawnTime./nidqSR + 0.9;                
+            case 'movement'
+                alignment = eventStruct(ii).TrialEventTimes.CheckerboardDrawnTime./nidqSR + eventStruct(ii).RT/1000;
+        end
+        
+
+        currIdx = spikeTime       > alignment-preV & spikeTime < alignment+post;
+        if ~isempty(spikeTime(currIdx))
+            % RL
+            if ismember(eventStruct(ii).cue, [117, 124, 135]) 
+                    rLR(lrcnt,ceil(1000.*(spikeTime(currIdx)+preV-alignment))) = 1;
+                    rFR_LR(lrcnt,:) = conv(rLR(lrcnt,:),g,'same');
+                    % subplot(5,1,2); hold on
+                    % plot(ceil(1000.*(spikeTime(currIdx)+preV-alignment)),lrcnt,'.','color',[.8 0 0]);
+
+                    lrcnt = lrcnt + 1;
+
+            end
+    
+            % RR
+            if eventStruct(ii).cue > 113
+                    rRR(rrcnt,ceil(1000.*(spikeTime(currIdx)+preV-alignment))) = 1;
+                    rFR_RR(rrcnt,:) = conv(rRR(rrcnt,:),g,'same');
+
+                    
+                    % subplot(5,1,3); hold on
+                    % plot(ceil(1000.*(spikeTime(currIdx)+preV-alignment)),rrcnt,'.','color',[.4 0 0]);
+
+                    rrcnt = rrcnt + 1;   
+
+
+            end
+    
+            % GL
+            if ismember(eventStruct(ii).cue, 225-[117 124 135]) 
+                    rLG(lgcnt,ceil(1000.*(spikeTime(currIdx)+preV-alignment))) = 1;
+                    rFR_LG(lgcnt,:) = conv(rLG(lgcnt,:),g,'same');
+
+
+                    % subplot(5,1,4); hold on
+                    % plot(ceil(1000.*(spikeTime(currIdx)+preV-alignment)),lgcnt,'.','color',[0 0.8 0]);  
+
+                    lgcnt = lgcnt + 1;   
+
+            end
+    
+            % GR
+            if eventStruct(ii).cue < 110
+                    rRG(rgcnt,ceil(1000.*(spikeTime(currIdx)+preV-alignment)))= 1;
+                    rFR_RG(rgcnt,:) = conv(rRG(rgcnt,:),g,'same');
+                    GR = rFR_RG(:,chopTime+1:end-chopTime);
+
+
+                    rgcnt = rgcnt + 1;  
+
+            end        
+    
+    
+        end                                
+    
+    
+    
+    end
+    
+    % remove convolution edge
+    RL = rFR_LR(:,chopTime+1:end-chopTime);
+    RR = rFR_RR(:,chopTime+1:end-chopTime);
+    GL = rFR_LG(:,chopTime+1:end-chopTime);
+    GR = rFR_RG(:,chopTime+1:end-chopTime);
+
+    % make sure there is no nan 
+    if sum(isnan(RL)) | isempty(RL)
+        RL = zeros(1,n-chopTime*2);
+    end
+    if sum(isnan(RR)) | isempty(RR)
+        RR = zeros(1,n-chopTime*2);
+    end
+    if sum(isnan(GL)) | isempty(GL)
+        GL = zeros(1,n-chopTime*2);
+    end
+    if sum(isnan(GR)) | isempty(GR)
+        GR = zeros(1,n-chopTime*2);
+    end    
+    
+    
+
+    if 0
+        figure('position', [2000,1500,800,600]);
+        
+        t = [pre+chopTime./1000:0.001:post-chopTime./1000]*1000;
+        plot(t,nanmean(RR),'--','color',[0.4 0 0.2])
+        hold on
+        plot(t,nanmean(RL),'-','color',[ 0.8 0 0]);
+        hold on
+        plot(t,nanmean(GR),'--','color',[0 0.4 0.2])
+        hold on
+        plot(t,nanmean(GL),'-','color',[ 0.0 0.8 0]);
+        hold on
+         
+        xline([0],'color','k','linestyle','--');
+        yline([5],'color','k','linestyle','--');
+        
+        title(['cluster: ' num2str(id) ' channelId: ' num2str(channelId(jj))])
+        
+        % ylim([0, 40])
+        pause();
+        close all;
+    end
+
+
+    firingRatesAverage(jj,1,1,:) = nanmean(RL,1);
+    firingRatesAverage(jj,1,2,:) = nanmean(RR,1);
+    firingRatesAverage(jj,2,1,:) = nanmean(GL,1);
+    firingRatesAverage(jj,2,2,:) = nanmean(GR,1);
+
+end
+
+disp('finished')

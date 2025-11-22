@@ -1,0 +1,229 @@
+function sessionData = returnSessionData_Bilbo(varargin)
+
+sessionData = struct;
+cnt = 1;
+
+sessionData(cnt).SessionId = '03202025';
+sessionData(cnt).baseDir = '/home/chandlab/HDD1/NPixExps/BILBO_CHKDLAY_DLPFC_03202025_g0/BILBO_CHKDLAY_DLPFC_03202025_g0_imec0/';
+sessionData(cnt).kilosortDir = 'kilosort4/';
+sessionData(cnt).eventsDir = '/home/chandlab/HDD1/events/Bilbo/20250320/';
+sessionData(cnt).eventsFile = 'CFDeventStruct.mat';
+sessionData(cnt).TaskName = 'CFD';
+sessionData(cnt).Location = 'DLPFC';
+sessionData(cnt).savetags = [7];
+% 
+% cnt = cnt + 1;
+% sessionData(cnt).SessionId = '03212025';
+% sessionData(cnt).baseDir = '/home/chandlab/HDD1/NPixExps/BILBO_CHKDLAY_DLPFC_03212025_g0/BILBO_CHKDLAY_DLPFC_03212025_g0_imec0/';
+% sessionData(cnt).kilosortDir = 'kilosort4/';
+% sessionData(cnt).eventsDir = '/home/chandlab/HDD1/events/Bilbo/20250321/';
+% sessionData(cnt).eventsFile = 'CFDeventStruct.mat';
+% sessionData(cnt).TaskName = 'CFD';
+% sessionData(cnt).Location = 'DLPFC';
+% sessionData(cnt).savetags = [4,5];
+
+cnt = cnt + 1;
+sessionData(cnt).SessionId = '03242025';
+sessionData(cnt).baseDir = '/home/chandlab/HDD1/NPixExps/BILBO_CHKDLAY_DLPFC_03242025_g0/BILBO_CHKDLAY_DLPFC_03242025_g0_imec0/';
+sessionData(cnt).kilosortDir = 'kilosort4/';
+sessionData(cnt).eventsDir = '/home/chandlab/HDD1/events/Bilbo/20250324/';
+sessionData(cnt).eventsFile = 'CFDeventStruct.mat';
+sessionData(cnt).TaskName = 'CFD';
+sessionData(cnt).Location = 'DLPFC';
+sessionData(cnt).savetags = [3,4,5];
+
+cnt = cnt + 1;
+sessionData(cnt).SessionId = '03252025';
+sessionData(cnt).baseDir = '/home/chandlab/HDD1/NPixExps/BILBO_CHKDLAY_DLPFC_03252025_g0/BILBO_CHKDLAY_DLPFC_03252025_g0_imec0/';
+sessionData(cnt).kilosortDir = 'kilosort4/';
+sessionData(cnt).eventsDir = '/home/chandlab/HDD1/events/Bilbo/20250325/';
+sessionData(cnt).eventsFile = 'CFDeventStruct.mat';
+sessionData(cnt).TaskName = 'CFD';
+sessionData(cnt).Location = 'DLPFC';
+sessionData(cnt).savetags = [1,2,3,4,5];
+
+cnt = cnt + 1;
+sessionData(cnt).SessionId = '03262025';
+sessionData(cnt).baseDir = '/home/chandlab/HDD1/NPixExps/BILBO_CHKDLAY_DLPFC_03262025_g0/BILBO_CHKDLAY_DLPFC_03262025_g0_imec0/';
+sessionData(cnt).kilosortDir = 'kilosort4/';
+sessionData(cnt).eventsDir = '/home/chandlab/HDD1/events/Bilbo/20250326/';
+sessionData(cnt).eventsFile = 'CFDeventStruct.mat';
+sessionData(cnt).TaskName = 'CFD';
+sessionData(cnt).Location = 'DLPFC';
+sessionData(cnt).savetags = [1,2,3,4,5];
+
+cnt = cnt + 1;
+sessionData(cnt).SessionId = '03272025';
+sessionData(cnt).baseDir = '/home/chandlab/HDD1/NPixExps/BILBO_CHKDLAY_DLPFC_03272025_g0/BILBO_CHKDLAY_DLPFC_03272025_g0_imec0/';
+sessionData(cnt).kilosortDir = 'kilosort4/';
+sessionData(cnt).eventsDir = '/home/chandlab/HDD1/events/Bilbo/20250327/';
+sessionData(cnt).eventsFile = 'CFDeventStruct.mat';
+sessionData(cnt).TaskName = 'CFD';
+sessionData(cnt).Location = 'DLPFC';
+sessionData(cnt).savetags = [1,2,3,4];
+
+cnt = cnt + 1;
+sessionData(cnt).SessionId = '03282025';
+sessionData(cnt).baseDir = '/home/chandlab/HDD1/NPixExps/BILBO_CHKDLAY_DLPFC_03282025_g0/BILBO_CHKDLAY_DLPFC_03282025_g0_imec0/';
+sessionData(cnt).kilosortDir = 'kilosort4/';
+sessionData(cnt).eventsDir = '/home/chandlab/HDD1/events/Bilbo/20250328/';
+sessionData(cnt).eventsFile = 'CFDeventStruct.mat';
+sessionData(cnt).TaskName = 'CFD';
+sessionData(cnt).Location = 'DLPFC';
+sessionData(cnt).savetags = [1,2,3,4,5,6,7];
+
+cnt = cnt + 1;
+sessionData(cnt).SessionId = '03312025';
+sessionData(cnt).baseDir = '/home/chandlab/HDD1/NPixExps/BILBO_CHKDLAY_DLPFC_03312025_g0/BILBO_CHKDLAY_DLPFC_03312025_g0_imec0/';
+sessionData(cnt).kilosortDir = 'kilosort4/';
+sessionData(cnt).eventsDir = '/home/chandlab/HDD1/events/Bilbo/20250331/';
+sessionData(cnt).eventsFile = 'CFDeventStruct.mat';
+sessionData(cnt).TaskName = 'CFD';
+sessionData(cnt).Location = 'DLPFC';
+sessionData(cnt).savetags = [2,3,4,5,6,7];
+
+cnt = cnt + 1;
+sessionData(cnt).SessionId = '04022025';
+sessionData(cnt).baseDir = '/home/chandlab/HDD1/NPixExps/BILBO_CHKDLAY_DLPFC_04022025_g0/BILBO_CHKDLAY_DLPFC_04022025_g0_imec0/';
+sessionData(cnt).kilosortDir = 'kilosort4/';
+sessionData(cnt).eventsDir = '/home/chandlab/HDD1/events/Bilbo/20250402/';
+sessionData(cnt).eventsFile = 'CFDeventStruct.mat';
+sessionData(cnt).TaskName = 'CFD';
+sessionData(cnt).Location = 'DLPFC';
+sessionData(cnt).savetags = [2];
+
+cnt = cnt + 1;
+sessionData(cnt).SessionId = '04032025';
+sessionData(cnt).baseDir = '/home/chandlab/HDD1/NPixExps/BILBO_CHKDLAY_DLPFC_04032025_g0/BILBO_CHKDLAY_DLPFC_04032025_g0_imec0/';
+sessionData(cnt).kilosortDir = 'kilosort4/';
+sessionData(cnt).eventsDir = '/home/chandlab/HDD1/events/Bilbo/20250403/';
+sessionData(cnt).eventsFile = 'CFDeventStruct.mat';
+sessionData(cnt).TaskName = 'CFD';
+sessionData(cnt).Location = 'DLPFC';
+sessionData(cnt).savetags = [1,2,3,4];
+
+cnt = cnt + 1;
+sessionData(cnt).SessionId = '04172025';
+sessionData(cnt).baseDir = '/home/chandlab/HDD1/NPixExps/BILBO_CHKDLAY_DLPFC_04172025_g0/BILBO_CHKDLAY_DLPFC_04172025_g0_imec0/';
+sessionData(cnt).kilosortDir = 'kilosort4/';
+sessionData(cnt).eventsDir = '/home/chandlab/HDD1/events/Bilbo/20250417/';
+sessionData(cnt).eventsFile = 'CFDeventStruct.mat';
+sessionData(cnt).TaskName = 'CFD';
+sessionData(cnt).Location = 'DLPFC';
+sessionData(cnt).savetags = [2];
+
+% cnt = cnt + 1;
+% sessionData(cnt).SessionId = '04182025';
+% sessionData(cnt).baseDir = '/home/chandlab/HDD1/NPixExps/BILBO_CHKDLAY_DLPFC_04182025_bank0_g0/BILBO_CHKDLAY_DLPFC_04182025_bank0_g0_imec0/';
+% sessionData(cnt).kilosortDir = 'kilosort4/';
+% sessionData(cnt).eventsDir = '/home/chandlab/HDD1/events/Bilbo/20250418/bank0';
+% sessionData(cnt).eventsFile = 'CFDeventStruct.mat';
+% sessionData(cnt).TaskName = 'CFD';
+% sessionData(cnt).Location = 'DLPFC';
+% sessionData(cnt).savetags = [1,2,3];
+
+cnt = cnt + 1;
+sessionData(cnt).SessionId = '04182025';
+sessionData(cnt).baseDir = '/home/chandlab/HDD1/NPixExps/BILBO_CHKDLAY_DLPFC_04182025_doublebank_g0/BILBO_CHKDLAY_DLPFC_04182025_doublebank_g0_imec0/';
+sessionData(cnt).kilosortDir = 'kilosort4/';
+sessionData(cnt).eventsDir = '/home/chandlab/HDD1/events/Bilbo/20250418/doublebank/';
+sessionData(cnt).eventsFile = 'CFDeventStruct.mat';
+sessionData(cnt).TaskName = 'CFD';
+sessionData(cnt).Location = 'DLPFC';
+sessionData(cnt).savetags = [4];
+
+cnt = cnt + 1;
+sessionData(cnt).SessionId = '04222025';
+sessionData(cnt).baseDir = '/home/chandlab/HDD1/NPixExps/BILBO_CHKDLAY_DLPFC_04222025_g0/BILBO_CHKDLAY_DLPFC_04222025_g0_imec0/';
+sessionData(cnt).kilosortDir = 'kilosort4/';
+sessionData(cnt).eventsDir = '/home/chandlab/HDD1/events/Bilbo/20250422/';
+sessionData(cnt).eventsFile = 'CFDeventStruct.mat';
+sessionData(cnt).TaskName = 'CFD';
+sessionData(cnt).Location = 'DLPFC';
+sessionData(cnt).savetags = [1,2,3];
+
+cnt = cnt + 1;
+sessionData(cnt).SessionId = '04222025';
+sessionData(cnt).baseDir = '/home/chandlab/HDD1/NPixExps/BILBO_CHKDLAY_DLPFC_04222025_bank1_g0/BILBO_CHKDLAY_DLPFC_04222025_bank1_g0_imec0/';
+sessionData(cnt).kilosortDir = 'kilosort4/';
+sessionData(cnt).eventsDir = '/home/chandlab/HDD1/events/Bilbo/20250422/';
+sessionData(cnt).eventsFile = 'CFDeventStructB1.mat';
+sessionData(cnt).TaskName = 'CFD';
+sessionData(cnt).Location = 'DLPFC';
+sessionData(cnt).savetags = [4];
+
+cnt = cnt + 1;
+sessionData(cnt).SessionId = '04242025';
+sessionData(cnt).baseDir = '/home/chandlab/HDD1/NPixExps/BILBO_CHKDLAY_DLPFC_04242025_doublebank_g0/BILBO_CHKDLAY_DLPFC_04242025_doublebank_g0_imec0/';
+sessionData(cnt).kilosortDir = 'kilosort4/';
+sessionData(cnt).eventsDir = '/home/chandlab/HDD1/events/Bilbo/20250424/';
+sessionData(cnt).eventsFile = 'CFDeventStruct.mat';
+sessionData(cnt).TaskName = 'CFD';
+sessionData(cnt).Location = 'DLPFC';
+sessionData(cnt).savetags = [1,2,3,4];
+
+cnt = cnt + 1;
+sessionData(cnt).SessionId = '08112025';
+sessionData(cnt).baseDir = '/home/chandlab/HDD1/NPixExps/BILBO_CHKDLAY_DLPFC_double_08112025_g0/BILBO_CHKDLAY_DLPFC_double_08112025_g0_imec0/';
+sessionData(cnt).kilosortDir = 'kilosort4/';
+sessionData(cnt).eventsDir = '/home/chandlab/HDD1/events/Bilbo/20250811/';
+sessionData(cnt).eventsFile = 'CFDeventStruct.mat';
+sessionData(cnt).TaskName = 'CFD';
+sessionData(cnt).Location = 'DLPFC';
+sessionData(cnt).savetags = [1,2,4,5];
+
+cnt = cnt + 1;
+sessionData(cnt).SessionId = '08122025';
+sessionData(cnt).baseDir = '/home/chandlab/HDD1/NPixExps/BILBO_CHKDLAY_DLPFC_double_08122025_g0/BILBO_CHKDLAY_DLPFC_double_08122025_g0_imec0/';
+sessionData(cnt).kilosortDir = 'kilosort4/';
+sessionData(cnt).eventsDir = '/home/chandlab/HDD1/events/Bilbo/20250812/';
+sessionData(cnt).eventsFile = 'CFDeventStruct.mat';
+sessionData(cnt).TaskName = 'CFD';
+sessionData(cnt).Location = 'DLPFC';
+sessionData(cnt).savetags = [1,2,3];
+
+cnt = cnt + 1;
+sessionData(cnt).SessionId = '08142025';
+sessionData(cnt).baseDir = '/home/chandlab/HDD1/NPixExps/BILBO_TFCFD_DLPFC_double_08142025_g0/BILBO_TFCFD_DLPFC_double_08142025_g0_imec0/';
+sessionData(cnt).kilosortDir = 'kilosort4/';
+sessionData(cnt).eventsDir = '/home/chandlab/HDD1/events/Bilbo/20250814/';
+sessionData(cnt).eventsFile = 'CFDeventStruct.mat';
+sessionData(cnt).TaskName = 'CFD';
+sessionData(cnt).Location = 'DLPFC';
+sessionData(cnt).savetags = [2,3];
+
+cnt = cnt + 1;
+sessionData(cnt).SessionId = '08182025';
+sessionData(cnt).baseDir = '/home/chandlab/HDD1/NPixExps/BILBO_TFCFD_DLPFC_double_08182025_g0/BILBO_TFCFD_DLPFC_double_08182025_g0_imec0/';
+sessionData(cnt).kilosortDir = 'kilosort4/';
+sessionData(cnt).eventsDir = '/home/chandlab/HDD1/events/Bilbo/20250818/';
+sessionData(cnt).eventsFile = 'CFDeventStruct.mat';
+sessionData(cnt).TaskName = 'CFD';
+sessionData(cnt).Location = 'DLPFC';
+sessionData(cnt).savetags = [5];
+
+cnt = cnt + 1;
+sessionData(cnt).SessionId = '08202025';
+sessionData(cnt).baseDir = '/home/chandlab/HDD1/NPixExps/BILBO_TFCFD_DLPFC_double_08202025_g0/BILBO_TFCFD_DLPFC_double_08202025_g0_imec0/';
+sessionData(cnt).kilosortDir = 'kilosort4/';
+sessionData(cnt).eventsDir = '/home/chandlab/HDD1/events/Bilbo/20250820/';
+sessionData(cnt).eventsFile = 'CFDeventStruct.mat';
+sessionData(cnt).TaskName = 'CFD';
+sessionData(cnt).Location = 'DLPFC';
+sessionData(cnt).savetags = [1];
+
+cnt = cnt + 1;
+sessionData(cnt).SessionId = '08252025';
+sessionData(cnt).baseDir = '/home/chandlab/HDD1/NPixExps/BILBO_CFDTF_DLPFC_double_08252025_g0/BILBO_CFDTF_DLPFC_double_08252025_g0_imec0/';
+sessionData(cnt).kilosortDir = 'kilosort4/';
+sessionData(cnt).eventsDir = '/home/chandlab/HDD1/events/Bilbo/20250825/';
+sessionData(cnt).eventsFile = 'CFDeventStruct.mat';
+sessionData(cnt).TaskName = 'CFD';
+sessionData(cnt).Location = 'DLPFC';
+sessionData(cnt).savetags = [2];
+
+
+
+
+
+

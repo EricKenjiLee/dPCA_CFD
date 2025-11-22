@@ -1,0 +1,258 @@
+function firingRatesAverage = returnSessionFiringRatesPerCoherence(sessionData, alignV, preD, postD, trialType, saveTags, delayInterval)
+%
+%
+
+addpath(genpath('~/Documents/NpxPostProcessing/utils/spikes/'))
+addpath(genpath('~/Documents/NpxPostProcessing/utils/npy-matlab'))
+
+timeShift = 0;
+chopTime = 200;
+task = 'CFD';
+
+% NI daq sampling rate
+nidqSR = 20000;
+
+% specify alignment
+align = alignV;
+
+% pre and post time around alignment
+pre = preD;
+preV = abs(pre);
+post = postD-0.001;
+
+% set the minimum spike numbers & amplitude 
+n_spikeThresh = 10000;
+ampThresh = 11;
+
+%%
+
+baseDir = sessionData.baseDir;
+myKsDir = [baseDir sessionData.kilosortDir];
+eventsDir = sessionData.eventsDir;
+
+clusterInfo = tdfread([myKsDir 'cluster_info.tsv']);
+fprintf("Total units: %d \n", length(clusterInfo.cluster_id))
+
+
+switch(task)
+    case('TF')
+        eventStruct = load([eventsDir sessionData.eventsFile]).TFeventStruct;
+    case('CF')
+        eventStruct = load([eventsDir sessionData.eventsFile]).CFeventStruct;
+    case('CFD')
+        eventStruct = load([eventsDir sessionData.eventsFile]).CFDeventStruct;
+end
+
+ST_values = arrayfun(@(x) str2double(regexp(x.ParameterData, '(?<=ST:)\d+', 'match', 'once')), eventStruct);
+delay_values = arrayfun(@(x) str2double(regexp(x.ParameterData, '(?<=D:)\d+', 'match', 'once')), eventStruct);
+
+if isempty(saveTags)
+    %do nothing
+else
+    valid_ST_trials = ismember(ST_values,saveTags);
+    eventStruct = eventStruct(valid_ST_trials);
+end
+
+if isempty(delayInterval)
+    %do nothing
+else
+    
+
+switch(trialType)
+    case 'correct'
+        eventStruct = eventStruct([eventStruct.correctness] == 1);
+    case 'wrong'
+        eventStruct = eventStruct([eventStruct.correctness] == 99);
+    otherwise
+
+end
+sp = loadKSdir(myKsDir);
+
+
+allSpikeTime = sp.st + timeShift;
+allSpikeClu = sp.clu;
+
+
+%% 
+
+g = normpdf([-0.1:0.001:0.1], 0,0.035);
+
+preV = abs(pre);
+n = length(pre:0.001:post);
+
+
+% use a filter to filter clusterID
+cluId = clusterInfo.cluster_id(clusterInfo.n_spikes > n_spikeThresh & clusterInfo.amp > ampThresh);
+channelId = clusterInfo.ch(clusterInfo.n_spikes > n_spikeThresh & clusterInfo.amp > ampThresh);
+
+fprintf("Post-filtered units: %d \n", length(cluId))
+
+%%
+firingRatesAverage = [];
+
+for jj = 1:length(cluId)
+    if mod(jj,25)==0
+        fprintf('.');  
+    end
+    
+    id = cluId(jj);
+    spikeTime = allSpikeTime(allSpikeClu == id);    
+    r11 = zeros(1,n);    
+    r12 = zeros(1,n);    
+    r13 = zeros(1,n); 
+    r14 = zeros(1,n); 
+    r11cnt = 1;
+    r12cnt = 1;
+    r13cnt = 1; 
+    r14cnt = 1;   
+     
+    g11 = zeros(1,n);    
+    g12 = zeros(1,n);    
+    g13 = zeros(1,n); 
+    g14 = zeros(1,n); 
+    g11cnt = 1;
+    g12cnt = 1;
+    g13cnt = 1; 
+    g14cnt = 1;
+
+    r1 = [];
+    r2 = [];
+    r3 = [];
+    r4 = [];
+    g1 = [];
+    g2 = [];
+    g3 = [];
+    g4 = [];
+
+
+    % figure('position', [1000 ,1500,1000,800]);
+    for ii = 1:length(eventStruct)
+    
+        
+        switch (align)
+            case 'targets'
+                alignment = eventStruct(ii).TrialEventTimes.TargetsDrawnTime./nidqSR;
+            case 'checkerboard' 
+                alignment = eventStruct(ii).TrialEventTimes.CheckerboardDrawnTime./nidqSR;
+            case 'delay' 
+                alignment = eventStruct(ii).TrialEventTimes.CheckerboardDrawnTime./nidqSR + 0.9;         
+            case 'movement'
+                alignment = eventStruct(ii).TrialEventTimes.CheckerboardDrawnTime./nidqSR + eventStruct(ii).RT/1000;
+        end
+        
+
+        currIdx = spikeTime       > alignment-preV & spikeTime < alignment+post;
+        if ~isempty(spikeTime(currIdx))
+            % RL
+            if ismember(eventStruct(ii).cue, [214]) 
+                    r11(r11cnt,ceil(1000.*(spikeTime(currIdx)+preV-alignment))) = 1; % create spike train
+                    r1(r11cnt,:) = conv(r11(r11cnt,:),g,'same');
+                    r11cnt = r11cnt + 1;
+
+            end
+
+            if ismember(eventStruct(ii).cue, [158 180]) 
+                    r12(r12cnt,ceil(1000.*(spikeTime(currIdx)+preV-alignment))) = 1;
+                    r2(r12cnt,:) = conv(r12(r12cnt,:),g,'same');
+                    r12cnt = r12cnt + 1;   
+            end
+            if ismember(eventStruct(ii).cue, [135 147]) 
+                    r13(r13cnt,ceil(1000.*(spikeTime(currIdx)+preV-alignment))) = 1;
+                    r3(r13cnt,:) = conv(r13(r13cnt,:),g,'same');
+                    r13cnt = r13cnt + 1;   
+            end
+
+            if ismember(eventStruct(ii).cue, [117 124]) 
+                    r14(r14cnt,ceil(1000.*(spikeTime(currIdx)+preV-alignment))) = 1;
+                    r4(r14cnt,:) = conv(r14(r14cnt,:),g,'same');
+                    r14cnt = r14cnt + 1;   
+            end
+            % GL
+             if ismember(eventStruct(ii).cue, 225- [214]) 
+                    g11(g11cnt,ceil(1000.*(spikeTime(currIdx)+preV-alignment))) = 1;
+                    g1(g11cnt,:) = conv(g11(g11cnt,:),g,'same');
+                    g11cnt = g11cnt + 1;
+
+            end
+
+            if ismember(eventStruct(ii).cue, 225 - [158 180]) 
+                    g12(g12cnt,ceil(1000.*(spikeTime(currIdx)+preV-alignment))) = 1;
+                    g2(g12cnt,:) = conv(g12(g12cnt,:),g,'same');
+                    g12cnt = g12cnt + 1;   
+            end
+            if ismember(eventStruct(ii).cue, 225 - [135 147]) 
+                    g13(g13cnt,ceil(1000.*(spikeTime(currIdx)+preV-alignment))) = 1;
+                    g3(g13cnt,:) = conv(g13(g13cnt,:),g,'same');
+                    g13cnt = g13cnt + 1;   
+            end
+    
+            if ismember(eventStruct(ii).cue, 225 - [117 124]) 
+                    g14(g14cnt,ceil(1000.*(spikeTime(currIdx)+preV-alignment))) = 1;
+                    g4(g14cnt,:) = conv(g14(g14cnt,:),g,'same');
+                    g14cnt = g14cnt + 1;   
+            end
+    
+          
+    
+    
+        end                                
+    
+    
+    
+    end
+    
+    % remove convolution edge
+    R1 = r1(:,chopTime+1:end-chopTime);
+    R2 = r2(:,chopTime+1:end-chopTime);
+    R3 = r3(:,chopTime+1:end-chopTime);
+    R4 = r4(:,chopTime+1:end-chopTime);
+
+    G1 = g1(:,chopTime+1:end-chopTime);
+    G2 = g2(:,chopTime+1:end-chopTime);
+    G3 = g3(:,chopTime+1:end-chopTime);
+    G4 = g4(:,chopTime+1:end-chopTime);
+
+    % make sure there is no nan 
+    if sum(isnan(r1)) | isempty(r1)
+        R1 = zeros(1,n-chopTime*2);
+    end
+    if sum(isnan(r2)) | isempty(r2)
+        R2 = zeros(1,n-chopTime*2);
+    end
+    if sum(isnan(r3)) | isempty(r3)
+        R3 = zeros(1,n-chopTime*2);
+    end
+    if sum(isnan(r4)) | isempty(r4)
+        R4 = zeros(1,n-chopTime*2);
+    end
+
+    if sum(isnan(g1)) | isempty(g1)
+        G1 = zeros(1,n-chopTime*2);
+    end
+    if sum(isnan(g2)) | isempty(g2)
+        G2 = zeros(1,n-chopTime*2);
+    end
+    if sum(isnan(g3)) | isempty(g3)
+        G3 = zeros(1,n-chopTime*2);
+    end
+    if sum(isnan(g4)) | isempty(g4)
+        G4 = zeros(1,n-chopTime*2);
+    end
+    
+    
+
+
+
+    firingRatesAverage(jj,1,1,:) = nanmean(R1,1);
+    firingRatesAverage(jj,1,2,:) = nanmean(R2,1);
+    firingRatesAverage(jj,1,3,:) = nanmean(R3,1);
+    firingRatesAverage(jj,1,4,:) = nanmean(R4,1);
+
+    firingRatesAverage(jj,2,1,:) = nanmean(G1,1);
+    firingRatesAverage(jj,2,2,:) = nanmean(G2,1);
+    firingRatesAverage(jj,2,3,:) = nanmean(G3,1);
+    firingRatesAverage(jj,2,4,:) = nanmean(G4,1);
+
+end
+
+disp('finished')
